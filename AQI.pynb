@@ -1,1 +1,70 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error
+
+# Load the dataset
+data = pd.read_csv("/content/AQI chatgpt.csv")  # Replace with your dataset filename
+
+# Explore the dataset
+print(data.head())  # Display the first few rows of the dataset
+print(data.info())  # Get information about the dataset
+
+# Data Preprocessing
+data['Date'] = pd.to_datetime(data['Date'])  # Convert Date column to datetime
+data = data.dropna()  # Remove rows with missing values
+
+# Data Visualization
+plt.figure(figsize=(10, 6))
+
+# Distribution of AQI
+plt.subplot(2, 2, 1)
+sns.histplot(data['AQI'], bins=20, kde=True)
+plt.title('Distribution of AQI')
+
+# AQI vs. Cities
+plt.subplot(2, 2, 2)
+sns.boxplot(x='City', y='AQI', data=data)
+plt.xticks(rotation=45)
+plt.title('AQI across Cities')
+
+# AQI vs. Year
+data['Year'] = data['Date'].dt.year
+plt.subplot(2, 2, 3)
+sns.lineplot(x='Year', y='AQI', data=data)
+plt.title('AQI over Years')
+
+# AQI vs. Month
+data['Month'] = data['Date'].dt.month
+plt.subplot(2, 2, 4)
+sns.boxplot(x='Month', y='AQI', data=data)
+plt.title('AQI by Month')
+
+plt.tight_layout()
+plt.show()
+
+# Convert categorical city names to numerical values using Label Encoding
+from sklearn.preprocessing import LabelEncoder
+le = LabelEncoder()
+data['City'] = le.fit_transform(data['City'])
+
+# Splitting data into features and target
+X = data.drop(['AQI', 'AQI_BUCKET', 'Date'], axis=1)
+y = data['AQI']
+
+# Splitting into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train a Random Forest model
+rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
+rf_model.fit(X_train, y_train)
+
+# Predict AQI on the test set
+y_pred = rf_model.predict(X_test)
+
+# Calculate Mean Squared Error
+mse = mean_squared_error(y_test, y_pred)
+print("Mean Squared Error:", mse)
 
